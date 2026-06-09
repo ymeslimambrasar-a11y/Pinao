@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroPiano - Virtual Piano Modern</title>
+    <!-- Tailwind CSS untuk styling cepat dan modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons untuk icon modern -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #050b14;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Glassmorphism custom effects */
+        .glass-panel {
+            background: rgba(10, 20, 38, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Custom scrollbar untuk keyboard piano */
+        .piano-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+        .piano-scroll::-webkit-scrollbar-track {
+            background: #0a1426;
+        }
+        .piano-scroll::-webkit-scrollbar-thumb {
+            background: #1e3a8a;
+            border-radius: 4px;
+        }
+        .piano-scroll::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+
+        /* Desain Tut Piano 3D */
+        .white-key {
+            background: linear-gradient(to bottom, #ffffff 0%, #f3f4f6 80%, #d1d5db 100%);
+            border: 1px solid #9ca3af;
+            border-bottom: 5px solid #9ca3af;
+            border-radius: 0 0 6px 6px;
+            transition: all 0.05s ease-out;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .white-key.active {
+            background: linear-gradient(to bottom, #3b82f6 0%, #1d4ed8 70%, #1e40af 100%) !important;
+            border-bottom: 2px solid #1e3a8a !important;
+            transform: translateY(3px);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+        }
+
+        .white-key.learning-highlight {
+            background: linear-gradient(to bottom, #10b981 0%, #047857 80%, #065f46 100%);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+        }
+
+        .black-key {
+            background: linear-gradient(to bottom, #111827 0%, #1f2937 80%, #030712 100%);
+            border: 1px solid #030712;
+            border-bottom: 4px solid #000000;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.5);
+            transition: all 0.05s ease-out;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        .black-key.active {
+            background: linear-gradient(to bottom, #2563eb 0%, #1d4ed8 80%, #1e40af 100%) !important;
+            border-bottom: 2px solid #111827 !important;
+            transform: translateY(2px) translateX(-50%);
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.8);
+        }
+
+        .black-key.learning-highlight {
+            background: linear-gradient(to bottom, #059669 0%, #065f46 80%, #022c22 100%);
+            box-shadow: 0 0 12px rgba(5, 150, 105, 0.7);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col justify-between p-2 md:p-6 overflow-x-hidden">
+
+    <!-- Container Utama -->
+    <div class="max-w-6xl w-full mx-auto flex flex-col gap-4 flex-grow justify-center">
+        
+        <!-- Header & Navigasi -->
+        <header class="glass-panel rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 shadow-lg shadow-blue-500/10">
+                    <i data-lucide="music" class="w-6 h-6 animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black tracking-wider bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">AEROPIANO</h1>
+                    <p class="text-xs text-blue-300/60 font-semibold tracking-widest">VIRTUAL SYNTH PRO</p>
+                </div>
+            </div>
+            
+            <!-- Panel Mode & Kontrol -->
+            <div class="flex flex-wrap items-center gap-2 md:gap-3">
+                <!-- Pilihan Instrumen -->
+                <div class="flex bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+                    <button id="btn-inst-piano" onclick="setInstrument('piano')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white transition-all shadow-md">Piano</button>
+                    <button id="btn-inst-synth" onclick="setInstrument('synth')" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all">Synth</button>
+                    <button id="btn-inst-organ" onclick="setInstrument('organ')" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all">Organ</button>
+                </div>
+
+                <!-- Toggle Label Nada -->
+                <button onclick="toggleLabels()" class="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl transition-all text-slate-300 flex items-center gap-2 text-xs font-medium">
+                    <i data-lucide="eye" class="w-4 h-4 text-blue-400"></i> Label Nada
+                </button>
+                
+                <!-- Reset App -->
+                <button onclick="resetAll()" class="p-2 bg-slate-900 hover:bg-red-950/30 border border-slate-800 hover:border-red-500/30 rounded-xl transition-all text-red-400 flex items-center gap-1.5 text-xs font-medium">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard: Kiri (Kontrol/Belajar/Rekam) & Kanan (Visualizer) -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- Panel Kiri: Perekam & Mode Belajar -->
+            <section class="lg:col-span-5 flex flex-col gap-4">
+                
+                <!-- Panel Perekam -->
+                <div class="glass-panel rounded-2xl p-4 flex flex-col gap-3 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold tracking-wider text-blue-400 flex items-center gap-1.5">
+                            <i data-lucide="disc" class="w-4 h-4 text-red-500 animate-pulse"></i> PEREKAM AUDIO
+                        </span>
+                        <span id="recording-status" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800">Siap Merekam</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2">
+                        <button id="btn-record" onclick="toggleRecord()" class="py-2.5 bg-red-600/15 hover:bg-red-600/30 border border-red-500/20 hover:border-red-500 text-red-400 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all">
+                            <span id="record-dot" class="w-2.5 h-2.5 bg-red-500 rounded-full"></span> Rekam
+                        </button>
+                        <button id="btn-stop-rec" onclick="stopRecording()" disabled class="py-2.5 bg-slate-900 text-slate-500 border border-slate-800 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all cursor-not-allowed">
+                            <i data-lucide="square" class="w-3.5 h-3.5"></i> Berhenti
+                        </button>
+                        <button id="btn-play-rec" onclick="playRecording()" disabled class="py-2.5 bg-slate-900 text-slate-500 border border-slate-800 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all cursor-not-allowed">
+                            <i data-lucide="play" class="w-3.5 h-3.5"></i> Putar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Panel Mode Belajar -->
+                <div class="glass-panel rounded-2xl p-4 flex flex-col gap-3 shadow-lg flex-grow">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold tracking-wider text-blue-400 flex items-center gap-1.5">
+                            <i data-lucide="graduation-cap" class="w-4 h-4 text-emerald-400"></i> MODE BELAJAR LAGU
+                        </span>
+                        <div id="learning-badge" class="hidden text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 animate-pulse">Aktif</div>
+                    </div>
+
+                    <!-- Dropdown Pilihan Lagu -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-slate-400">Pilih Lagu Pembelajaran:</label>
+                        <select id="song-selector" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-all">
+                            <option value="ibu_kita_kartini">Ibu Kita Kartini</option>
+                            <option value="happy_birthday">Happy Birthday To You</option>
+                            <option value="twinkle_twinkle">Twinkle Twinkle Little Star</option>
+                            <option value="balonku">Balonku Ada Lima</option>
+                        </select>
+                    </div>
+
+                    <!-- Panduan Nada Berikutnya -->
+                    <div class="bg-slate-950/80 rounded-xl p-3 border border-slate-900 flex flex-col gap-2 min-h-[90px] justify-center items-center">
+                        <div id="learning-instruction" class="text-slate-400 text-xs text-center font-medium">Klik "Mulai Belajar" di bawah untuk melihat instruksi nada di sini.</div>
+                        <div id="next-note-display" class="hidden text-3xl font-black text-emerald-400 tracking-wide animate-bounce"></div>
+                        <div id="learning-progress" class="hidden text-[10px] text-slate-500 font-bold uppercase mt-1"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <button id="btn-start-learn" onclick="startLearning()" class="py-2.5 bg-emerald-600/15 hover:bg-emerald-600/30 border border-emerald-500/20 hover:border-emerald-500 text-emerald-400 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all">
+                            <i data-lucide="play-circle" class="w-4 h-4"></i> Mulai Belajar
+                        </button>
+                        <button id="btn-stop-learn" onclick="stopLearning()" class="py-2.5 bg-slate-900 text-slate-400 border border-slate-800 hover:bg-slate-800 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all">
+                            <i data-lucide="stop-circle" class="w-4 h-4"></i> Keluar
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel Kanan: Visualizer & Info Kontrol Keyboard -->
+            <section class="lg:col-span-7 flex flex-col gap-4">
+                
+                <!-- Visualizer Interaktif -->
+                <div class="glass-panel rounded-2xl p-4 flex flex-col gap-3 shadow-lg justify-between flex-grow min-h-[140px] relative overflow-hidden">
+                    <div class="flex items-center justify-between z-10">
+                        <span class="text-sm font-bold tracking-wider text-blue-400 flex items-center gap-1.5">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4"></i> AUDIO VISUALIZER
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Web Audio Engine</span>
+                        </div>
+                    </div>
+
+                    <!-- Canvas untuk visualizer gelombang suara -->
+                    <div class="w-full h-24 bg-slate-950/80 rounded-xl border border-slate-900 overflow-hidden relative">
+                        <canvas id="visualizer-canvas" class="w-full h-full block"></canvas>
+                        <div id="visualizer-placeholder" class="absolute inset-0 flex items-center justify-center text-slate-600 text-xs font-semibold pointer-events-none">
+                            Tekan tut piano untuk menghasilkan visualisasi
+                        </div>
+                    </div>
+
+                    <!-- Petunjuk Keyboard Fisik -->
+                    <div class="flex flex-wrap gap-2 text-xs text-slate-400 leading-relaxed justify-between border-t border-slate-800/40 pt-2.5">
+                        <span class="font-semibold text-blue-300">Skema Tombol:</span>
+                        <span>Tut Putih: <strong class="text-slate-200">A, S, D, F, G, H, J, K, L, ;, '</strong></span>
+                        <span>Tut Hitam: <strong class="text-slate-200">W, E, T, Y, U, O, P</strong></span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Keyboard Piano -->
+        <section class="glass-panel rounded-3xl p-4 md:p-6 shadow-2xl relative">
+            
+            <!-- Kontrol Oktaf & Range Slider -->
+            <div class="flex justify-between items-center mb-4 text-xs md:text-sm font-bold text-slate-400 px-1">
+                <div class="flex items-center gap-2">
+                    <span>Oktaf Aktif:</span>
+                    <div class="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                        <button onclick="changeOctave(-1)" class="w-8 py-1 bg-slate-900 hover:bg-slate-800 rounded-md text-slate-200 transition-all">-</button>
+                        <span id="octave-display" class="w-10 text-center py-1 text-blue-400 font-bold self-center">3 - 5</span>
+                        <button onclick="changeOctave(1)" class="w-8 py-1 bg-slate-900 hover:bg-slate-800 rounded-md text-slate-200 transition-all">+</button>
+                    </div>
+                </div>
+                <div class="hidden sm:flex items-center gap-2">
+                    <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-blue-400 animate-bounce"></i>
+                    <span>Bisa disentuh langsung (Android & iOS)</span>
+                </div>
+            </div>
+
+            <!-- Frame Utama Keyboard -->
+            <div class="w-full overflow-x-auto pb-2 piano-scroll">
+                <div id="piano-keyboard" class="relative flex min-w-[720px] md:min-w-[900px] h-48 md:h-64 select-none">
+                    <!-- Dinamis Di-render oleh JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Info / Footer -->
+        <footer class="text-center text-[11px] text-slate-600 font-medium tracking-wider py-2">
+            AeroPiano &copy; 2026 • Dirancang untuk Kinerja Web Latency Rendah • Dibuat dengan HTML5 Web Audio API
+        </footer>
+    </div>
+
+    <!-- Sistem Dialog Mandiri pengganti alert() -->
+    <div id="custom-alert" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-panel max-w-sm w-full rounded-2xl p-5 shadow-2xl flex flex-col gap-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-blue-600/10 border border-blue-500/30 text-blue-400 flex items-center justify-center mx-auto">
+                <i data-lucide="info" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 id="alert-title" class="text-lg font-bold text-slate-100">Pemberitahuan</h3>
+                <p id="alert-message" class="text-sm text-slate-400 mt-1">Isi pesan di sini.</p>
+            </div>
+            <button onclick="closeAlert()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-blue-500/20">Mengerti</button>
+        </div>
+    </div>
+
+    <!-- Script Utama Logika Piano -->
+    <script>
+        // Inisialisasi Lucide Icons
+        lucide.createIcons();
+
+        // 1. DATA CONSTANTS & LAGU (MODE BELAJAR)
+        const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const WHITE_KEYS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+        
+        // Pemetaan keyboard komputer ke MIDI Notes
+        const KEY_MAP = {
+            'a': 'C',  'w': 'C#',
+            's': 'D',  'e': 'D#',
+            'd': 'E',
+            'f': 'F',  't': 'F#',
+            'g': 'G',  'y': 'G#',
+            'h': 'A',  'u': 'A#',
+            'j': 'B',
+            'k': 'C_next', 'o': 'C#_next',
+            'l': 'D_next', 'p': 'D#_next',
+            ';': 'E_next',
+            "'": 'F_next'
+        };
+
+        // Data lagu pembelajaran
+        const SONGS = {
+            ibu_kita_kartini: {
+                name: "Ibu Kita Kartini",
+                notes: [
+                    "C4", "D4", "E4", "F4", "G4", "E4", "C4",
+                    "A4", "C5", "A4", "G4",
+                    "F4", "A4", "G4", "F4", "E4",
+                    "D4", "F4", "E4", "D4", "C4"
+                ]
+            },
+            happy_birthday: {
+                name: "Happy Birthday",
+                notes: [
+                    "C4", "C4", "D4", "C4", "F4", "E4",
+                    "C4", "C4", "D4", "C4", "G4", "F4",
+                    "C4", "C4", "C5", "A4", "F4", "E4", "D4",
+                    "A#4", "A#4", "A4", "F4", "G4", "F4"
+                ]
+            },
+            twinkle_twinkle: {
+                name: "Twinkle Twinkle Little Star",
+                notes: [
+                    "C4", "C4", "G4", "G4", "A4", "A4", "G4",
+                    "F4", "F4", "E4", "E4", "D4", "D4", "C4",
+                    "G4", "G4", "F4", "F4", "E4", "E4", "D4",
+                    "G4", "G4", "F4", "F4", "E4", "E4", "D4",
+                    "C4", "C4", "G4", "G4", "A4", "A4", "G4",
+                    "F4", "F4", "E4", "E4", "D4", "D4", "C4"
+                ]
+            },
+            balonku: {
+                name: "Balonku Ada Lima",
+                notes: [
+                    "C4", "D4", "E4", "F4", "G4", "E4", "G4", "C5",
+                    "G4", "F4", "E4", "D4", "G4", "F4", "E4", "D4", "C4"
+                ]
+            }
+        };
+
+        // 2. CONFIG STATE
+        let activeOctaveBase = 3; // Rentang default dari C3 hingga B5
+        let showNoteLabels = true;
+        let selectedInstrument = 'piano';
+        
+        // Perekaman State
+        let isRecording = false;
+        let recordingStartTime = 0;
+        let recordedEvents = [];
+        let playbackTimeoutIds = [];
+
+        // Belajar State
+        let isLearning = false;
+        let selectedSongKey = 'ibu_kita_kartini';
+        let currentLearningStep = 0;
+
+        // Fungsi pembantu untuk mencari tombol laptop yang dipetakan ke nada & oktaf tertentu
+        function getLaptopKeyForNote(noteName, octaveNum) {
+            const midOctave = activeOctaveBase + 1;
+            const nextOctave = activeOctaveBase + 2;
+            
+            if (octaveNum === midOctave) {
+                for (const [key, val] of Object.entries(KEY_MAP)) {
+                    if (val === noteName) {
+                        return key.toUpperCase();
+                    }
+                }
+            } else if (octaveNum === nextOctave) {
+                for (const [key, val] of Object.entries(KEY_MAP)) {
+                    if (val === noteName + '_next') {
+                        return key.toUpperCase();
+                    }
+                }
+            }
+            return '';
+        }
+
+        // 3. AUDIO ENGINE & SYNTH (Web Audio API)
+        let audioCtx = null;
+        let analyzerNode = null;
+        const activeOscillators = {}; // Melacak suara yang aktif diputar
+
+        // Inisialisasi Audio Context ketika interaksi pertama kali dilakukan
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Set Up Analyzer untuk Visualizer
+                analyzerNode = audioCtx.createAnalyser();
+                analyzerNode.fftSize = 256;
+                analyzerNode.connect(audioCtx.destination);
+                
+                // Jalankan animasi visualizer
+                drawVisualizer();
+                document.getElementById('visualizer-placeholder').style.display = 'none';
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Generator Frekuensi Nada berdasarkan formula standard MIDI
+        function getFrequencyOfNote(noteName, octave) {
+            const index = NOTE_NAMES.indexOf(noteName);
+            const midiNumber = 12 * (octave + 1) + index;
+            return 440 * Math.pow(2, (midiNumber - 69) / 12);
+        }
+
+        // Fungsi Memainkan Nada dengan gema & dengungan yang lebih lama
+        function playTone(note, octave) {
+            initAudio();
+            const noteKey = `${note}${octave}`;
+            const freq = getFrequencyOfNote(note, octave);
+            
+            // Hentikan suara nada yang sama jika sedang aktif
+            stopTone(note, octave);
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            // Atur Karakteristik Suara Berdasarkan Instrumen (Sustain Diperpanjang)
+            if (selectedInstrument === 'piano') {
+                // Synth mirip piano: Kaya harmonik dengan decay melandai yang sangat anggun dan lama
+                osc.type = 'triangle';
+                
+                // Tambahkan overtone tipis menggunakan sine untuk detail akustik (Sustain 3.0 detik)
+                const overtone = audioCtx.createOscillator();
+                const overtoneGain = audioCtx.createGain();
+                overtone.type = 'sine';
+                overtone.frequency.setValueAtTime(freq * 2, audioCtx.currentTime);
+                overtoneGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                overtoneGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.0);
+                overtone.connect(overtoneGain);
+                overtoneGain.connect(analyzerNode);
+                overtone.start();
+                overtone.stop(audioCtx.currentTime + 3.2);
+
+                // Mengatur volume utama piano perlahan memudar hingga 4.5 detik (menahan suara lebih lama)
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 4.5);
+            } else if (selectedInstrument === 'synth') {
+                // Suara Neon Lead modern dengan sustain melayang (3.5 detik)
+                osc.type = 'sawtooth';
+                gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3.5);
+            } else if (selectedInstrument === 'organ') {
+                // Karakteristik organ gereja yang tebal dan megah (5.0 detik)
+                osc.type = 'sine';
+                
+                const drawbar = audioCtx.createOscillator();
+                const drawbarGain = audioCtx.createGain();
+                drawbar.type = 'triangle';
+                drawbar.frequency.setValueAtTime(freq * 1.5, audioCtx.currentTime);
+                drawbarGain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                drawbarGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 4.0);
+                drawbar.connect(drawbarGain);
+                drawbarGain.connect(analyzerNode);
+                drawbar.start();
+                drawbar.stop(audioCtx.currentTime + 4.2);
+
+                gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 5.0);
+            }
+
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            // Hubungkan ke output utama melalui visualizer
+            osc.connect(gainNode);
+            gainNode.connect(analyzerNode);
+            
+            osc.start();
+            
+            // Simpan referensi osilator aktif untuk dilepas nanti
+            activeOscillators[noteKey] = {
+                oscillator: osc,
+                gain: gainNode
+            };
+        }
+
+        // Fungsi Melepas Nada secara Smooth (Simulasi Sustain Pedal)
+        function stopTone(note, octave) {
+            const noteKey = `${note}${octave}`;
+            if (activeOscillators[noteKey]) {
+                const currentGain = activeOscillators[noteKey].gain;
+                const currentOsc = activeOscillators[noteKey].oscillator;
+                
+                try {
+                    // Mencegah letupan suara dengan meredam volume secara perlahan (efek pedal reverb)
+                    currentGain.gain.cancelScheduledValues(audioCtx.currentTime);
+                    currentGain.gain.setValueAtTime(currentGain.gain.value, audioCtx.currentTime);
+                    
+                    // Meningkatkan durasi gema pelepasan dari 0.15 detik menjadi 1.8 detik!
+                    currentGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.8);
+                    currentOsc.stop(audioCtx.currentTime + 1.9);
+                } catch(e) {
+                    // Penanganan error jika osilator sudah selesai
+                }
+                
+                delete activeOscillators[noteKey];
+            }
+        }
+
+        // 4. PEMBUATAN INTERFACE KEYBOARD PIANO
+        function buildKeyboard() {
+            const container = document.getElementById('piano-keyboard');
+            container.innerHTML = '';
+
+            const totalOctaves = 3; // Membuat 3 oktaf beruntun
+            let whiteKeyIndex = 0;
+
+            // Buat layout tut putih & hitam
+            for (let oct = 0; oct < totalOctaves; oct++) {
+                const octaveNum = activeOctaveBase + oct;
+
+                for (let i = 0; i < 12; i++) {
+                    const noteName = NOTE_NAMES[i];
+                    const noteKey = `${noteName}${octaveNum}`;
+                    const isBlack = noteName.includes('#');
+
+                    if (!isBlack) {
+                        // Tut Putih
+                        const keyEl = document.createElement('div');
+                        keyEl.id = `key-${noteKey}`;
+                        keyEl.className = 'white-key flex-1 h-full flex flex-col justify-end items-center pb-4 transition-all relative select-none';
+                        keyEl.setAttribute('data-note', noteName);
+                        keyEl.setAttribute('data-octave', octaveNum);
+                        
+                        // Buat wadah label nada dan keyboard shortcut
+                        const labelEl = document.createElement('div');
+                        labelEl.className = 'note-label flex flex-col items-center pointer-events-none transition-opacity gap-1';
+                        if (!showNoteLabels) labelEl.classList.add('opacity-0');
+
+                        // Deteksi dan tambahkan keycap laptop jika ada mappingnya
+                        const laptopKey = getLaptopKeyForNote(noteName, octaveNum);
+                        if (laptopKey) {
+                            const keycap = document.createElement('span');
+                            keycap.className = 'px-1.5 py-0.5 bg-slate-900 text-blue-400 text-[9px] md:text-[11px] font-black rounded border border-slate-700 shadow-inner tracking-normal min-w-[18px] text-center';
+                            keycap.textContent = laptopKey;
+                            labelEl.appendChild(keycap);
+                        }
+                        
+                        const noteText = document.createElement('span');
+                        noteText.className = 'text-[9px] md:text-[10px] font-bold text-slate-500';
+                        noteText.textContent = `${noteName}${octaveNum}`;
+                        labelEl.appendChild(noteText);
+
+                        keyEl.appendChild(labelEl);
+
+                        // Pasang Event Interaksi (Mendukung Multi-touch & Click)
+                        keyEl.addEventListener('mousedown', (e) => handleKeyStart(noteName, octaveNum, e));
+                        keyEl.addEventListener('mouseup', () => handleKeyEnd(noteName, octaveNum));
+                        keyEl.addEventListener('mouseleave', () => handleKeyEnd(noteName, octaveNum));
+                        
+                        keyEl.addEventListener('touchstart', (e) => {
+                            e.preventDefault();
+                            handleKeyStart(noteName, octaveNum);
+                        }, {passive: false});
+                        keyEl.addEventListener('touchend', (e) => {
+                            e.preventDefault();
+                            handleKeyEnd(noteName, octaveNum);
+                        }, {passive: false});
+
+                        container.appendChild(keyEl);
+                        whiteKeyIndex++;
+                    }
+                }
+            }
+
+            // Lapisan kedua untuk menggambar tut hitam di atas tut putih dengan presisi absolut
+            let currentWhiteKeyOffset = 0;
+            const containerWidth = container.clientWidth || 900;
+            // Menghitung jumlah tut putih (7 tut per oktaf)
+            const totalWhiteKeys = totalOctaves * 7;
+            const keyWidthPercent = 100 / totalWhiteKeys;
+
+            for (let oct = 0; oct < totalOctaves; oct++) {
+                const octaveNum = activeOctaveBase + oct;
+                
+                for (let i = 0; i < 12; i++) {
+                    const noteName = NOTE_NAMES[i];
+                    const noteKey = `${noteName}${octaveNum}`;
+                    const isBlack = noteName.includes('#');
+
+                    if (isBlack) {
+                        // Tut Hitam
+                        const keyEl = document.createElement('div');
+                        keyEl.id = `key-${noteKey}`;
+                        keyEl.className = 'black-key absolute h-2/3 flex flex-col justify-end items-center pb-3 transition-all select-none';
+                        keyEl.setAttribute('data-note', noteName);
+                        keyEl.setAttribute('data-octave', octaveNum);
+
+                        // Hitung posisi horizontal absolut agar presisi di sela tut putih
+                        const leftPosition = (currentWhiteKeyOffset * keyWidthPercent);
+                        keyEl.style.left = `calc(${leftPosition}% - (2.2% / 2))`;
+                        keyEl.style.width = `2.5%`;
+
+                        // Buat wadah label nada dan keyboard shortcut
+                        const labelEl = document.createElement('div');
+                        labelEl.className = 'note-label flex flex-col items-center pointer-events-none transition-opacity gap-1';
+                        if (!showNoteLabels) labelEl.classList.add('opacity-0');
+
+                        // Deteksi dan tambahkan keycap laptop jika ada mappingnya
+                        const laptopKey = getLaptopKeyForNote(noteName, octaveNum);
+                        if (laptopKey) {
+                            const keycap = document.createElement('span');
+                            keycap.className = 'px-1 py-0.5 bg-blue-600 text-white text-[7px] md:text-[8px] font-black rounded border border-blue-400 shadow-sm min-w-[13px] text-center';
+                            keycap.textContent = laptopKey;
+                            labelEl.appendChild(keycap);
+                        }
+
+                        const noteText = document.createElement('span');
+                        noteText.className = 'text-[7px] md:text-[8px] font-bold text-slate-400';
+                        noteText.textContent = noteName;
+                        labelEl.appendChild(noteText);
+
+                        keyEl.appendChild(labelEl);
+
+                        // Pasang Event Interaksi
+                        keyEl.addEventListener('mousedown', (e) => handleKeyStart(noteName, octaveNum, e));
+                        keyEl.addEventListener('mouseup', () => handleKeyEnd(noteName, octaveNum));
+                        keyEl.addEventListener('mouseleave', () => handleKeyEnd(noteName, octaveNum));
+                        
+                        keyEl.addEventListener('touchstart', (e) => {
+                            e.preventDefault();
+                            handleKeyStart(noteName, octaveNum);
+                        }, {passive: false});
+                        keyEl.addEventListener('touchend', (e) => {
+                            e.preventDefault();
+                            handleKeyEnd(noteName, octaveNum);
+                        }, {passive: false});
+
+                        container.appendChild(keyEl);
+                    } else {
+                        // Majukan offset ketika menemui tut putih
+                        currentWhiteKeyOffset++;
+                    }
+                }
+            }
+        }
+
+
+        // 5. INTERACTION HANDLERS (LOGIKA UTAMA TOMBOL DITEKAN)
+        function handleKeyStart(note, octave, event) {
+            // Cek jika klik mouse kanan, abaikan
+            if (event && event.button !== 0) return;
+
+            playTone(note, octave);
+            
+            // Efek visual tombol ditekan
+            const keyEl = document.getElementById(`key-${note}${octave}`);
+            if (keyEl) keyEl.classList.add('active');
+
+            // Sistem Perekam Aktif
+            if (isRecording) {
+                const timestamp = Date.now() - recordingStartTime;
+                recordedEvents.push({
+                    type: 'down',
+                    note: note,
+                    octave: octave,
+                    time: timestamp
+                });
+            }
+
+            // Evaluasi Progress Pembelajaran
+            if (isLearning) {
+                checkLearnedNote(note, octave);
+            }
+        }
+
+        function handleKeyEnd(note, octave) {
+            stopTone(note, octave);
+            
+            const keyEl = document.getElementById(`key-${note}${octave}`);
+            if (keyEl) keyEl.classList.remove('active');
+
+            // Sistem Perekam Aktif (Key Up)
+            if (isRecording) {
+                const timestamp = Date.now() - recordingStartTime;
+                recordedEvents.push({
+                    type: 'up',
+                    note: note,
+                    octave: octave,
+                    time: timestamp
+                });
+            }
+        }
+
+
+        // 6. DETEKSI KEYBOARD KOMPUTER
+        const activeKeysPressed = {};
+
+        window.addEventListener('keydown', (e) => {
+            // Abaikan input jika user sedang fokus mengetik di elemen form/select
+            if (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'INPUT') {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (KEY_MAP[key] && !activeKeysPressed[key]) {
+                activeKeysPressed[key] = true;
+                
+                let targetNote = KEY_MAP[key];
+                let targetOctave = activeOctaveBase + 1; // Default dimainkan di oktaf tengah-atas (Oktaf 4)
+
+                // Handing khusus tut dengan akhiran "_next" (pindah ke oktaf berikutnya)
+                if (targetNote.endsWith('_next')) {
+                    targetNote = targetNote.replace('_next', '');
+                    targetOctave += 1;
+                }
+
+                handleKeyStart(targetNote, targetOctave);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+            if (KEY_MAP[key]) {
+                activeKeysPressed[key] = false;
+                
+                let targetNote = KEY_MAP[key];
+                let targetOctave = activeOctaveBase + 1;
+
+                if (targetNote.endsWith('_next')) {
+                    targetNote = targetNote.replace('_next', '');
+                    targetOctave += 1;
+                }
+
+                handleKeyEnd(targetNote, targetOctave);
+            }
+        });
+
+
+        // 7. FITUR PEREKAMAN AUDIO & PLAYBACK (MIDI Style)
+        function toggleRecord() {
+            if (!isRecording) {
+                // Mulai Merekam
+                isRecording = true;
+                recordedEvents = [];
+                recordingStartTime = Date.now();
+                
+                document.getElementById('recording-status').textContent = 'Merekam...';
+                document.getElementById('recording-status').className = 'text-xs px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 animate-pulse';
+                document.getElementById('btn-record').classList.add('bg-red-600', 'text-white');
+                document.getElementById('record-dot').classList.add('bg-white');
+
+                document.getElementById('btn-stop-rec').disabled = false;
+                document.getElementById('btn-stop-rec').className = 'py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all';
+                
+                // Matikan tombol play saat rekam baru dimulai
+                document.getElementById('btn-play-rec').disabled = true;
+                document.getElementById('btn-play-rec').className = 'py-2.5 bg-slate-900 text-slate-500 border border-slate-800 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all cursor-not-allowed';
+            }
+        }
+
+        function stopRecording() {
+            if (isRecording) {
+                isRecording = false;
+                
+                document.getElementById('recording-status').textContent = `${recordedEvents.length} Event Direkam`;
+                document.getElementById('recording-status').className = 'text-xs px-2.5 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800';
+                document.getElementById('btn-record').classList.remove('bg-red-600', 'text-white');
+                document.getElementById('record-dot').classList.remove('bg-white');
+                
+                document.getElementById('btn-stop-rec').disabled = true;
+                document.getElementById('btn-stop-rec').className = 'py-2.5 bg-slate-900 text-slate-500 border border-slate-800 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all cursor-not-allowed';
+
+                if (recordedEvents.length > 0) {
+                    document.getElementById('btn-play-rec').disabled = false;
+                    document.getElementById('btn-play-rec').className = 'py-2.5 bg-blue-600/15 hover:bg-blue-600/30 border border-blue-500/20 hover:border-blue-500 text-blue-400 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all';
+                }
+            }
+        }
+
+        function playRecording() {
+            if (recordedEvents.length === 0) return;
+            
+            // Hentikan sisa pemutaran lama jika ada
+            playbackTimeoutIds.forEach(id => clearTimeout(id));
+            playbackTimeoutIds = [];
+
+            document.getElementById('recording-status').textContent = 'Memutar Ulang...';
+            document.getElementById('recording-status').className = 'text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse';
+
+            // Jadwalkan semua event nada dengan timing aslinya
+            recordedEvents.forEach(event => {
+                const timeoutId = setTimeout(() => {
+                    if (event.type === 'down') {
+                        playTone(event.note, event.octave);
+                        const keyEl = document.getElementById(`key-${event.note}${event.octave}`);
+                        if (keyEl) keyEl.classList.add('active');
+                    } else {
+                        stopTone(event.note, event.octave);
+                        const keyEl = document.getElementById(`key-${event.note}${event.octave}`);
+                        if (keyEl) keyEl.classList.remove('active');
+                    }
+                }, event.time);
+                
+                playbackTimeoutIds.push(timeoutId);
+            });
+
+            // Jadwalkan kembalinya status ke normal setelah lagu selesai
+            const totalDuration = recordedEvents[recordedEvents.length - 1].time + 500;
+            const endTimeoutId = setTimeout(() => {
+                document.getElementById('recording-status').textContent = 'Selesai Diputar';
+                document.getElementById('recording-status').className = 'text-xs px-2.5 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800';
+            }, totalDuration);
+            playbackTimeoutIds.push(endTimeoutId);
+        }
+
+
+        // 8. LOGIKA MODE BELAJAR LAGU (TUTORIAL)
+        function startLearning() {
+            isLearning = true;
+            currentLearningStep = 0;
+            selectedSongKey = document.getElementById('song-selector').value;
+            
+            document.getElementById('learning-badge').classList.remove('hidden');
+            document.getElementById('next-note-display').classList.remove('hidden');
+            document.getElementById('learning-progress').classList.remove('hidden');
+            document.getElementById('learning-instruction').textContent = 'Ayo mainkan nada berikut pada piano:';
+            
+            showNextLearningNote();
+        }
+
+        function stopLearning() {
+            isLearning = false;
+            
+            document.getElementById('learning-badge').classList.add('hidden');
+            document.getElementById('next-note-display').classList.add('hidden');
+            document.getElementById('learning-progress').classList.add('hidden');
+            document.getElementById('learning-instruction').textContent = 'Klik "Mulai Belajar" di bawah untuk melihat instruksi nada di sini.';
+            
+            // Bersihkan semua highlight hijau di tut piano
+            clearAllHighlights();
+        }
+
+        function showNextLearningNote() {
+            clearAllHighlights();
+            
+            const song = SONGS[selectedSongKey];
+            if (currentLearningStep < song.notes.length) {
+                const nextNoteWithOctave = song.notes[currentLearningStep]; // Contoh: "C4"
+                
+                // Update UI Instruksi
+                document.getElementById('next-note-display').textContent = nextNoteWithOctave;
+                document.getElementById('learning-progress').textContent = `NADA ${currentLearningStep + 1} DARI ${song.notes.length}`;
+
+                // Beri highlight hijau pada tombol piano fisik/virtual yang harus ditekan
+                const keyEl = document.getElementById(`key-${nextNoteWithOctave}`);
+                if (keyEl) {
+                    keyEl.classList.add('learning-highlight');
+                    
+                    // Secara otomatis scroll keyboard agar tut yang perlu ditekan terlihat di layar HP
+                    keyEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    // Jika nada diluar jangkauan oktaf saat ini, otomatis geser oktaf dasar piano
+                    const targetOctave = parseInt(nextNoteWithOctave.replace(/[^0-9]/g, ''));
+                    if (targetOctave < activeOctaveBase || targetOctave > activeOctaveBase + 2) {
+                        activeOctaveBase = Math.max(1, targetOctave - 1);
+                        updateOctaveDisplay();
+                        buildKeyboard();
+                        
+                        // Coba highlight lagi setelah build ulang keyboard
+                        const reKeyEl = document.getElementById(`key-${nextNoteWithOctave}`);
+                        if (reKeyEl) reKeyEl.classList.add('learning-highlight');
+                    }
+                }
+            } else {
+                // Belajar Selesai!
+                stopLearning();
+                showAlert("Hebat!", `Selamat! Anda berhasil menyelesaikan panduan bermain lagu "${song.name}" dengan sempurna! 🎉`);
+            }
+        }
+
+        function checkLearnedNote(note, octave) {
+            const song = SONGS[selectedSongKey];
+            const expectedNoteWithOctave = song.notes[currentLearningStep];
+            const playedNoteWithOctave = `${note}${octave}`;
+
+            if (playedNoteWithOctave === expectedNoteWithOctave) {
+                // Jika benar, lanjut ke nada berikutnya!
+                currentLearningStep++;
+                showNextLearningNote();
+            }
+        }
+
+        function clearAllHighlights() {
+            document.querySelectorAll('.white-key, .black-key').forEach(el => {
+                el.classList.remove('learning-highlight');
+            });
+        }
+
+
+        // 9. EVENT CONTROL & UTILITIES
+        function setInstrument(instrument) {
+            selectedInstrument = instrument;
+            
+            // Atur style tombol aktif
+            ['piano', 'synth', 'organ'].forEach(inst => {
+                const btn = document.getElementById(`btn-inst-${inst}`);
+                if (inst === instrument) {
+                    btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white transition-all shadow-md";
+                } else {
+                    btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all";
+                }
+            });
+        }
+
+        function changeOctave(direction) {
+            const nextBase = activeOctaveBase + direction;
+            // Batasi oktaf aman minimal 1 dan maksimal 6
+            if (nextBase >= 1 && nextBase <= 6) {
+                activeOctaveBase = nextBase;
+                updateOctaveDisplay();
+                buildKeyboard();
+                
+                // Terapkan ulang highlight jika mode belajar sedang berjalan
+                if (isLearning) {
+                    showNextLearningNote();
+                }
+            }
+        }
+
+        function updateOctaveDisplay() {
+            document.getElementById('octave-display').textContent = `${activeOctaveBase} - ${activeOctaveBase + 2}`;
+        }
+
+        function toggleLabels() {
+            showNoteLabels = !showNoteLabels;
+            document.querySelectorAll('.note-label').forEach(el => {
+                if (showNoteLabels) {
+                    el.classList.remove('opacity-0');
+                } else {
+                    el.classList.add('opacity-0');
+                }
+            });
+        }
+
+        function resetAll() {
+            stopLearning();
+            stopRecording();
+            activeOctaveBase = 3;
+            updateOctaveDisplay();
+            setInstrument('piano');
+            buildKeyboard();
+            showAlert("Sistem Direset", "AeroPiano telah dikembalikan ke pengaturan default.");
+        }
+
+
+        // 10. DIALOG BOX REPLACEMENT FOR ALERT()
+        function showAlert(title, message) {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            document.getElementById('custom-alert').classList.remove('hidden');
+        }
+
+        function closeAlert() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        }
+
+
+        // 11. AUDIO VISUALIZER (Canvas API)
+        function drawVisualizer() {
+            const canvas = document.getElementById('visualizer-canvas');
+            const canvasCtx = canvas.getContext('2d');
+            
+            // Set ukuran canvas internal sesuai dengan ukuran render layar
+            const resizeCanvas = () => {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            };
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            const bufferLength = analyzerNode.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                requestAnimationFrame(draw);
+                
+                analyzerNode.getByteFrequencyData(dataArray);
+                
+                canvasCtx.fillStyle = '#050b14';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const barWidth = (canvas.width / bufferLength) * 1.5;
+                let barHeight;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i];
+
+                    // Gradasi Elegan Biru ke Cyan
+                    const r = 59;
+                    const g = 130 + (barHeight / 2);
+                    const b = 246;
+
+                    canvasCtx.fillStyle = `rgb(${r},${g},${b})`;
+                    
+                    // Bentuk bar bulat di atas agar mulus
+                    canvasCtx.beginPath();
+                    canvasCtx.roundRect(x, canvas.height - (barHeight / 2.5), barWidth - 1, barHeight / 2.5, [2, 2, 0, 0]);
+                    canvasCtx.fill();
+
+                    x += barWidth;
+                }
+            }
+            draw();
+        }
+
+        // Inisialisasi awal saat halaman termuat
+        window.onload = () => {
+            buildKeyboard();
+            updateOctaveDisplay();
+        };
+    </script>
+</body>
+</html>
